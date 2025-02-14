@@ -1,7 +1,7 @@
 {
   "name": "projnorm",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "src/index.js",
   "bin": {
     "projnorm": "./bin/cli.js"
   },
@@ -9,9 +9,16 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": [
+    "项目规范化",
+    "husky",
+    "commitizen",
+    "lint-staged",
+    "prettier",
+    "eslint"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "前端项目格式化相关依赖安装",
   "dependencies": {
     "chalk": "^5.4.1",
@@ -19,5 +26,13 @@
     "inquirer": "^12.4.1",
     "jsonfile": "^6.1.0",
     "ora": "^8.2.0"
+  },
+  "homepage":"https://github.com/ting772/projnorm#readme",
+  "repository": {  
+    "type": "git",  
+    "url": "https://github.com/ting772/projnorm"  
+  },
+  "bugs": {  
+    "url": "https://github.com/ting772/projnorm/issues"  
   }
 }
