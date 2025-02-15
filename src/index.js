@@ -184,7 +184,7 @@ const configsMap = {
         tabWidth: 4,
         semi: false,
         singleQuote: true,
-        end_of_line: 'lf',
+        end_of_line: 'crlf',
         max_line_length: 80
       }
     )
@@ -225,3 +225,5 @@ async function run() {
 }
 
 run()
+
+// commit-and-tag-version
