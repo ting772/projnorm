@@ -1,13 +1,16 @@
 {
   "name": "projnorm",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "main": "src/index.js",
   "bin": {
     "projnorm": "./bin/cli.js"
   },
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky",
+    "commit": "cz",
+    "release": "cross-env HUSKY=0 commit-and-tag-version"
   },
   "keywords": [
     "项目规范化",
@@ -27,12 +30,34 @@
     "jsonfile": "^6.1.0",
     "ora": "^8.2.0"
   },
-  "homepage":"https://github.com/ting772/projnorm#readme",
-  "repository": {  
-    "type": "git",  
-    "url": "https://github.com/ting772/projnorm"  
+  "homepage": "https://github.com/ting772/projnorm#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ting772/projnorm"
   },
-  "bugs": {  
-    "url": "https://github.com/ting772/projnorm/issues"  
+  "bugs": {
+    "url": "https://github.com/ting772/projnorm/issues"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.20.0",
+    "commit-and-tag-version": "^12.5.0",
+    "commitizen": "^4.3.1",
+    "cross-env": "^7.0.3",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^9.20.1",
+    "eslint-config-prettier": "^10.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.5.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "commit-and-tag-version": {
+    "scripts": {
+      "posttag": "git push --follow-tags && npm publish"
+    }
   }
 }

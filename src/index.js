@@ -2,18 +2,26 @@ import inquirer from 'inquirer'
 import { access, constants } from 'node:fs/promises'
 import { cwd } from 'node:process'
 import { resolve } from 'node:path'
-import { info, error, execShell, writejson, updateJsonFile } from './utils/utils.js'
-import { writeFile } from 'node:fs/promises';
+import {
+  info,
+  error,
+  execShell,
+  writejson,
+  updateJsonFile,
+  warn,
+} from './utils/utils.js'
+import { writeFile } from 'node:fs/promises'
 
 /**
  * 依赖安装映射表
  */
 const installMap = {
-  useHusky: ["husky"],
-  useLintStaged: ["lint-staged"],
-  useCommitizen: ["commitizen", "cz-conventional-changelog"],
-  useEslint: ["eslint", "@eslint/js"],
-  usePrettier: ["prettier"]
+  useHusky: ['husky'],
+  useLintStaged: ['lint-staged'],
+  useCommitizen: ['commitizen', 'cz-conventional-changelog'],
+  useEslint: ['eslint', '@eslint/js'],
+  usePrettier: ['prettier'],
+  useCommitAndTagVersion: ['commit-and-tag-version', 'cross-env'],
 }
 
 function noteCwd() {
@@ -21,9 +29,14 @@ function noteCwd() {
 }
 
 function checkPkgFile() {
-  return access(resolve(cwd(), 'package.json'), constants.R_OK | constants.W_OK).catch(err => {
+  return access(
+    resolve(cwd(), 'package.json'),
+    constants.R_OK | constants.W_OK
+  ).catch((err) => {
     if (err.code == 'ENOENT') {
-      error('当前工作目录非npm项目根目录，请先执行npm init命令创建package.json文件')
+      error(
+        '当前工作目录非npm项目根目录，请先执行npm init命令创建package.json文件'
+      )
     } else {
       console.error(err)
     }
@@ -32,7 +45,7 @@ function checkPkgFile() {
 }
 
 function checkGitProject() {
-  return access(resolve(cwd(), '.git'), constants.R_OK).catch(err => {
+  return access(resolve(cwd(), '.git'), constants.R_OK).catch((err) => {
     if (err.code == 'ENOENT') {
       error('当前工作目录不是git仓库，请先执行git init初始git仓库')
     } else {
@@ -45,38 +58,45 @@ function checkGitProject() {
 function askQuestions() {
   let questions = [
     {
-      type: "confirm",
-      name: "useHusky",
-      message: "是否安装husky",
-      default: true
+      type: 'confirm',
+      name: 'useHusky',
+      message: '是否安装husky',
+      default: true,
     },
     {
-      type: "confirm",
-      name: "useLintStaged",
-      message: "是否安装lint-staged",
-      default: true
+      type: 'confirm',
+      name: 'useLintStaged',
+      message: '是否安装lint-staged',
+      default: true,
     },
     {
-      type: "confirm",
-      name: "useCommitizen",
-      message: "是否安装commitizen",
-      default: true
+      type: 'confirm',
+      name: 'useCommitizen',
+      message: '是否安装commitizen',
+      default: true,
     },
     {
-      type: "confirm",
-      name: "useEslint",
-      message: "是否安装eslint",
-      default: true
+      type: 'confirm',
+      name: 'useEslint',
+      message: '是否安装eslint',
+      default: true,
     },
     {
-      type: "confirm",
-      name: "usePrettier",
-      message: "是否安装prettier",
-      default: true
+      type: 'confirm',
+      name: 'usePrettier',
+      message: '是否安装prettier',
+      default: true,
+    },
+    {
+      type: 'confirm',
+      name: 'useCommitAndTagVersion',
+      message:
+        '是否安装commit-and-tag-version(升级版本，生成changelog,打标签自动化)',
+      default: true,
     },
   ]
 
-  return inquirer.prompt(questions).catch(err => {
+  return inquirer.prompt(questions).catch((err) => {
     if (err.name == 'ExitPromptError') {
       info('用户关闭了输入')
     } else {
@@ -94,7 +114,7 @@ async function install(cfg) {
 
   //同时使用prettier和eslint,安装eslint-config-prettier来关闭eslint样式检查
   if (cfg.usePrettier && cfg.useEslint) {
-    deps.push("eslint-config-prettier")
+    deps.push('eslint-config-prettier')
   }
   await execShell({ shell: `npm install --save-dev ${deps.join(' ')}` })
   return cfg
@@ -113,7 +133,11 @@ const configsMap = {
               }
            */
       if (!pkgObj.scripts.commit) {
-        pkgObj.scripts.commit = "cz"
+        pkgObj.scripts.commit = 'cz'
+      } else {
+        warn(
+          'package.json已有scripts.commit命令，请手动添加cz命令到scripts配置中'
+        )
       }
 
       /**
@@ -131,20 +155,23 @@ const configsMap = {
       }
       if (!pkgObj.config.commitizen) {
         pkgObj.config.commitizen = {
-          path: "cz-conventional-changelog"
+          path: 'cz-conventional-changelog',
         }
       }
     })
     //如果安装了husky，创建prepare-commit-msg钩子文件
     if (config.useHusky) {
-      await execShell({ shell: "touch .husky/prepare-commit-msg" })
+      await execShell({ shell: 'touch .husky/prepare-commit-msg' })
       let shell = 'exec </dev/tty >&0 && node_modules/.bin/cz --hook'
-      await execShell({ shell: `echo ${shell}`, output: '.husky/prepare-commit-msg' })
+      await execShell({
+        shell: `echo ${shell}`,
+        output: '.husky/prepare-commit-msg',
+      })
     }
   },
   useLintStaged: async (config) => {
     //生成.lintstagedrc.json文件
-    await execShell({ shell: "touch .lintstagedrc.json" })
+    await execShell({ shell: 'touch .lintstagedrc.json' })
 
     /**
      *  代码检查
@@ -157,37 +184,35 @@ const configsMap = {
     let obj = {}
     if (config.usePrettier || config.useEslint) {
       obj = {
-        "*.js": []
+        '*.js': [],
       }
 
       if (config.usePrettier) {
-        obj["*.js"].push("prettier -w")
+        obj['*.js'].push('prettier -w')
       }
 
       if (config.useEslint) {
-        obj["*.js"].push("eslint")
+        obj['*.js'].push('eslint')
       }
     }
 
-    await writejson(".lintstagedrc.json", obj)
+    await writejson('.lintstagedrc.json', obj)
     //添加git钩子
-    await execShell({ shell: "touch .husky/pre-commit" })
-    await execShell({ shell: "echo lint-staged", output: ".husky/pre-commit" })
+    await execShell({ shell: 'touch .husky/pre-commit' })
+    await execShell({ shell: 'echo lint-staged', output: '.husky/pre-commit' })
   },
   usePrettier: async () => {
     //生成.prettierignore、prettierrc
     await execShell({ shell: 'touch .prettierignore' })
     await execShell({ shell: 'touch .prettierrc' })
-    await writejson('.prettierrc',
-      {
-        trailingComma: "es5",
-        tabWidth: 4,
-        semi: false,
-        singleQuote: true,
-        end_of_line: 'crlf',
-        max_line_length: 80
-      }
-    )
+    await writejson('.prettierrc', {
+      trailingComma: 'es5',
+      tabWidth: 2,
+      semi: false,
+      singleQuote: true,
+      end_of_line: 'crlf',
+      max_line_length: 120,
+    })
   },
   useEslint: async (config) => {
     //创建eslint.config.js
@@ -195,16 +220,56 @@ const configsMap = {
 
     //写入eslint.config.js规则
     let content = [
-      'import pluginJs from "@eslint/js"',
-      config.usePrettier ? 'import eslintConfigPrettier from "eslint-config-prettier";' : '',
-      "\nexport default [",
-      "  pluginJs.configs.recommended" + (config.usePrettier ? ',' : ''),
-      config.usePrettier ? '  eslintConfigPrettier' : '',
-      "]"
+      "import pluginJs from '@eslint/js'",
+      "import globals from 'globals';",
+      config.usePrettier
+        ? "import eslintConfigPrettier from 'eslint-config-prettier';"
+        : '',
+      '\nexport default [',
+      '  pluginJs.configs.recommended,',
+      config.usePrettier ? '  eslintConfigPrettier,' : '',
+      '  {',
+      '    languageOptions: {',
+      "      ecmaVersion: 'latest',",
+      '      globals:{',
+      '        ...globals.browser',
+      '      }',
+      '    }',
+      '  }',
+      ']',
     ].filter(Boolean)
 
-    await writeFile("eslint.config.js", content.join('\n'))
-  }
+    await writeFile('eslint.config.js', content.join('\n'))
+  },
+  useCommitAndTagVersion: async () => {
+    await updateJsonFile(`${resolve(cwd(), 'package.json')}`, (pkgObj) => {
+      /**
+           * 追加release命令
+           *  "scripts": {
+                "release": "commit-and-tag-version"
+              }
+           */
+      if (!pkgObj.scripts.release) {
+        //关闭HUSKY，跳过钩子校验
+        pkgObj.scripts.release = 'cross-env HUSKY=0 commit-and-tag-version'
+      } else {
+        warn(
+          'package.json已有scripts.release命令，请手动添加commit-and-tag-version命令到scripts配置中'
+        )
+      }
+
+      /**
+       * 追加配置字段
+       * {
+            "commit-and-tag-version":{
+            }
+          }
+       */
+      if (!pkgObj['commit-and-tag-version']) {
+        pkgObj['commit-and-tag-version'] = {}
+      }
+    })
+  },
 }
 
 async function setupConfigs(config) {
@@ -220,7 +285,14 @@ async function setupConfigs(config) {
 }
 
 async function run() {
-  let tasks = [noteCwd, checkPkgFile, checkGitProject, askQuestions, install, setupConfigs]
+  let tasks = [
+    noteCwd,
+    checkPkgFile,
+    checkGitProject,
+    askQuestions,
+    install,
+    setupConfigs,
+  ]
   await tasks.reduce((acc, fn) => acc.then(fn), Promise.resolve())
 }
 
